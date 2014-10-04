@@ -1,15 +1,19 @@
 ﻿		qwertLabs = {
 			data:function(){
 				return{
-					url: "URL"			
+					url: "http://localhost/laravel/toko/toko/public/admin/json"			
 				}
 			},
-			serverRespond:function(){
+			serverResponse:function(){
 				return {
-					msg_Xa : 'msgauthissuccess',
-					msg_Xb : 'usernotexist',
-					msg_Xc : 'msgfailpasswordiswrong',
-					msg_Xd : 'msgfailinterrupt',
+					msg_Xa : 'MsgFailPasswordIsWrong',
+					msg_Xb : 'MsgFailUserNotRegistered',
+					msg_Xc : 'MsgAuthISuccess',
+					msg_Xd : 'MsgFailAlreadyExist',
+					msg_Xe : 'MsgSuccessUpdate',
+					msg_Xf : 'MsgSuccessDelete',
+					msg_Xg : 'MsgSuccessInsert',
+					msg_Xh : 'MsgSuccessSelect',
 				}		
 			},
 			elementName:function(){
@@ -24,6 +28,7 @@
 					p		: 'p',
 					label	: 'label',
 					a		: 'a',
+					str     : '~inavP'
 				}
 			}
 		}
@@ -189,7 +194,8 @@
 						case 'button': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('button')]);break;
 						case 'span': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('span')]);break;
 						case 'label': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('label')]);break;						
-						case 'div': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('div')]);break;				
+						case 'div': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('div')]);break;
+						case 'li': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('li')]);break;						
 					}
 				}
 				return parentCETA;
@@ -211,6 +217,7 @@
 					  if (selector === false){					
 						return bodyFunction.apply(this,[a,b,c]);
 					  }else{
+						getallof.rollback();
 					  	return bodySelector.apply(this,[bodyFunction.call(this,a,b,c),selector])
 					  }						
 					},
@@ -220,6 +227,7 @@
 					    				
 					},
 					elementValue : function (a,b,c,selector){		
+						getallof.rollback();
 					    parentCETA = bodyFunction.apply(this,[a,b,c]);
 					    return retrieveelementvalue.apply(this,[containerallofelements, bodySelector.call(this,parentCETA,selector),'value']);						  					    											
 					},
@@ -291,7 +299,7 @@
 				this.callback.apply(this, this.arguments) 
 			}
 
-			function postType(getFunction,url,getData,handler,contentTyp){			
+			function postType(getFunction,url,getData,handler,contentTyp,method){			
 			    var data = false;
 			    var self = getFunction;
 			    
@@ -303,8 +311,14 @@
 			 	
 		        self.data.callback = handler
 		   		self.data.arguments = Array.prototype.slice.call(arguments, 2)
-				self.data.onload = getSpot;												   		
-			    self.data.open('POST', url, true);			    
+				self.data.onload = getSpot;		
+				
+				if(method == 'typepost'){
+			    self.data.open('POST', url, true);
+				}else if(method == 'typeget'){
+					 self.data.open('GET', url, true);
+				}
+				
 			    if(contentTyp == 'application/json;charset=UTF-8'){
 				    self.data.setRequestHeader("Content-Type", contentTyp);	
 					self.data.send(JSON.stringify(getData));				
@@ -317,39 +331,22 @@
 			return{
 				alpha:function (geturl,sendData,alphaHandler) {
 				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof alphaHandler !== "undefined"){	
-				    	postType.apply(this,[this,geturl,sendData,alphaHandler,contentType[0]])														 							    			    
+				    	postType.apply(this,[this,geturl,sendData,alphaHandler,contentType[0],'typepost'])														 							    			    
 				 	}				 						    
 		   		},
 		   		zeta:function (geturl,sendData,zetaHandler) {
 				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof zetaHandler !== "undefined"){					   
-				    	postType.apply(this,[this,geturl,sendData,zetaHandler,contentType[1]])														 							    			    
+				    	postType.apply(this,[this,geturl,sendData,zetaHandler,contentType[1],'typepost'])														 							    			    
+				 	}		   		
+		   		},
+		   		eta:function (geturl,sendData,zetaHandler) {
+				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof zetaHandler !== "undefined"){					   
+				    	postType.apply(this,[this,geturl,sendData,zetaHandler,contentType[1],'typeget'])														 							    			    
 				 	}		   		
 		   		},
 		   		ommega:function(geturl,sendData,alphaHandler){
 				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof alphaHandler !== "undefined"){
-					    var data = false;
-					    var self = this;
-					 	if (window.XMLHttpRequest) {
-					 	 self.data = new XMLHttpRequest();
-					 	}else {
-					     self.data = new ActiveXObject("Microsoft.XMLHTTP");
-					 	} 
-				        self.data.callback = alphaHandler
-				   		self.data.arguments = Array.prototype.slice.call(arguments, 2)
-						self.data.onload = getSpot;												   		
-					    self.data.open('POST', geturl, true);
-					    
-						var boundary = '---------------------------' + Math.floor(Math.random()*32768) + Math.floor(Math.random()*32768) + Math.floor(Math.random()*32768);
-						self.data.setRequestHeader( "Content-Type", 'multipart/form-data; boundary=' + boundary );
-						var dataFile = '';
-						dataFile += '--' + boundary + '\r\n' + 'Content-Disposition: form-data; name="';
-						dataFile += "newconfig";
-						dataFile += '"\r\n\r\n';
-						dataFile += sendData;
-						dataFile += '\r\n'
-						dataFile += '--' + boundary + '--';	
-
-						self.data.send(dataFile);						    			    
+					   						    			    
 				 	}
 				    					 
 				}
@@ -439,17 +436,18 @@
 		  	} 
 		}
 		
-		var getallof = new retrievemultitypeofelement(),random = new randomstr(),customcapca = new customcapca(),send = new sendpost(),got = new getpost(),listener = new attachlistener(),validate = new parentFunc(),urlH = new qwertLabs.data().url, srvRsnp = Object.create(qwertLabs.serverRespond()),el = Object.create(qwertLabs.elementName())
+		var getallof = new retrievemultitypeofelement(),random = new randomstr(),customcapca = new customcapca(),send = new sendpost(),got = new getpost(),listener = new attachlistener(),validate = new parentFunc(),urlH = new qwertLabs.data().url, srvRsnp = Object.create(qwertLabs.serverResponse()),el = Object.create(qwertLabs.elementName())
 
-		var $$;	
+		window.$$= null;	
 		var constructLab = {
 		  loadData: (function(callback,args){
 			callback.apply(this,[urlH,null,function handlerAlpha() {
 				 $$ = args.call(this,this.responseText)
+				 
 			}])			
 		  })(send.alpha,got.beta) 
 		}
-
+		
 
 
 		function parentFunc(sRespond,domParent) {
@@ -506,7 +504,7 @@
 				var value =	element[index].value;
 				if (getExceptional != 'throughElement'){
 					if( value !== ''){
-						if(value.length >= 3 ){
+						if(value.length >= 1 ){
 						  if (element[index].nodeName.toLowerCase() == el.input){						
 							if(getExceptional == 'numeric'){
 						    	if(value.numericValidate() === true){
@@ -638,7 +636,29 @@
 	
 			}	
 		}
-
+		multi ={
+			check:function(fields,check){
+				var k = 0,l = 0;									
+				function trickyRadio(element,numEl){
+					listener.add(element,'ch',function () {
+						if (element.checked == true){
+							fields[numEl].checked = true						
+							check.apply(this, [fields[numEl]]) 		
+						}else{
+							fields[numEl].checked = false						
+							check.apply(this, [fields[numEl]]) 		
+						}
+									
+					})				
+				}
+				
+				do{
+					new trickyRadio(fields[k],k);
+					k++
+				}
+				while(k < fields.length)			
+			}
+		}
 		single = {
 			radio:function(fields,radio){
 				var k = 0,l = 0;									
@@ -714,4 +734,6 @@
 						    return getallof.rollback(),getallof.elementValue(array,body,element,select);							    			    
 				  }	       
 			}
-	   };			
+	   };
+	   
+	   window.history.pushState(document.url,'',document.url);
