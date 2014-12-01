@@ -120,8 +120,8 @@
 				return index
 			}
 		};
-
-
+		
+		
 		function ascyFunc (){
 			return{
 				disabled: function(element){
@@ -195,7 +195,11 @@
 						case 'span': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('span')]);break;
 						case 'label': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('label')]);break;						
 						case 'div': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('div')]);break;
-						case 'li': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('li')]);break;						
+						case 'li': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('li')]);break;	
+						case 'h3': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('h3')]);break;
+						case 'h5': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('h5')]);break;
+						case 'a': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('a')]);break;
+						case 'i': retrieveelement.apply(this,[parentCETA,containerelementtypearray.getElementsByTagName('i')]);break;
 					}
 				}
 				return parentCETA;
@@ -314,7 +318,7 @@
 				self.data.onload = getSpot;		
 				
 				if(method == 'typepost'){
-			    self.data.open('POST', url, true);
+					 self.data.open('POST', url, true);
 				}else if(method == 'typeget'){
 					 self.data.open('GET', url, true);
 				}
@@ -339,9 +343,9 @@
 				    	postType.apply(this,[this,geturl,sendData,zetaHandler,contentType[1],'typepost'])														 							    			    
 				 	}		   		
 		   		},
-		   		eta:function (geturl,sendData,zetaHandler) {
-				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof zetaHandler !== "undefined"){					   
-				    	postType.apply(this,[this,geturl,sendData,zetaHandler,contentType[1],'typeget'])														 							    			    
+		   		eta:function (geturl,sendData,etaHandler) {
+				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof etaHandler !== "undefined"){					   
+				    	postType.apply(this,[this,geturl,sendData,etaHandler,contentType[1],'typeget'])														 							    			    
 				 	}		   		
 		   		},
 		   		ommega:function(geturl,sendData,alphaHandler){
@@ -404,7 +408,49 @@
 				     }else{
 				      return element.addEventListener('popstate', funct, false);
 				     }
-				     
+				   case 'mouseenter':	
+				     if (element.attachEvent){
+				      return element.attachEvent('onmouseenter', funct);
+				     }else{
+				      return element.addEventListener('mouseenter', funct, false);
+				     }
+				   case 'mouseleave':	
+					 if (element.attachEvent){
+					  return element.attachEvent('onmouseleave', funct);
+					 }else{
+					  return element.addEventListener('mouseleave', funct, false);
+					 }
+				   case 'keydown' :
+					if (element.attachEvent){
+					  return element.attachEvent('onkeydown', funct);
+					}else{
+					  return element.addEventListener('keydown', funct, false);
+					}
+				   case 'keypress' :
+					if (element.attachEvent){
+					  return element.attachEvent('onkeypress', funct);
+					}else{
+					  return element.addEventListener('keypress', funct, false);
+					}
+				   case 'hover' :
+					if (element.attachEvent){
+					  return element.attachEvent('onmouseover', funct);
+					}else{
+					  return element.addEventListener('mouseover', funct, false);
+					}
+				   case 'hoverout' :
+					if (element.attachEvent){
+					  return element.attachEvent('onmouseout', funct);
+					}else{
+					  return element.addEventListener('mouseout', funct, false);
+					}
+				   case 'blur' :
+					if (element.attachEvent){
+					  return element.attachEvent('onblur', funct);
+					}else{
+					  return element.addEventListener('blur', funct, false);
+					}
+				   
 			     } 
 		  	  },
 		  	  off:function(element){
@@ -419,6 +465,9 @@
 		  	  unhide:function(element){
 		  	  	xFunc.block.apply (xFunc, [element]);
 		  	  },
+			  getText:function(element){
+				return xFunc.text.apply (xFunc, [element]);
+			  },
 		  	  pushUrl:function(serverResponse,targetUrl){
 				var now = new Date();
 				var time = now.getTime();
@@ -493,8 +542,60 @@
 		    }else{
 	    		return false
 	    	}
-    
 		};	
+
+		String.prototype.zipCodeValidate = function(char) {				
+		    var index = this
+		    if (index.length == 5){
+		    	
+				return true		    
+		    }else{
+	    		return false
+	    	}
+		};			
+		String.prototype.removeUnexpectedString = function(char) {				
+			var index = this,newIndex = index;
+			if(newIndex.indexOf("script") > -1){
+				newIndex = newIndex.replace("script", "");
+			}
+			if(newIndex.indexOf("/script") > -1){
+				newIndex = newIndex.replace("/script", "");
+			}
+			if(newIndex.indexOf("<") > -1){
+				newIndex = newIndex.replace(/</g, "");
+			}
+			if(newIndex.indexOf(">") > -1){
+				newIndex = newIndex.replace(/>/g, "");
+			}
+
+			
+			return newIndex;
+		};		
+		String.prototype.commonValidate = function(char) {				
+			var index = this,newIndex = index;
+			if(newIndex.indexOf("script") > -1){
+				return false;
+			}else if(index.indexOf("script") > -1){
+				return false;
+			}else if(index.indexOf("<") > -1){
+				return false;
+			}else if(index.indexOf(">") > -1){
+				return false;
+			}else{
+				return true;
+			}
+    
+		};
+		
+		String.prototype.IsJson = function() {
+			var index = this
+			try {
+				JSON.parse(index);
+			} catch (e) {
+				return false;
+			}
+			return true;
+		};
 		
 		passDumpt = new Array();
 		
@@ -534,7 +635,19 @@
 						    	}else{
 						    		argsCondt.push(6)
 						    	}						
-							}							
+							}
+							if(getExceptional == 'zipcode'){
+						    	if(value.zipCodeValidate() === true){
+									if(value.numericValidate() === true){
+										
+									}else{
+										argsCondt.push(3)
+									}	
+						    	}else{
+						    		argsCondt.push(9)
+						    	}						
+							}
+							
 						  }else if(element[index].nodeName.toLowerCase() == el.select){
 								if( value != 'none'){
 								
@@ -542,6 +655,14 @@
 									argsCondt.push(5)
 								}
 						  }
+						  
+						 if(getExceptional !== 'password'){
+								if(value.commonValidate() === true){
+								
+								}else{
+									argsCondt.push(8)
+								}
+						 }
 						}else{
 							argsCondt.push(2)
 						}				
@@ -611,7 +732,13 @@
 									break
 								case 7:									
 									msgAppend.push($$.message_Xj),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break																															
+									break
+								case 8:									
+									msgAppend.push($$.message_zL),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+									break
+								case 9:									
+									msgAppend.push($$.message_Zu),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+									break
 							}
 						}
 					}else{
@@ -671,7 +798,6 @@
 								fields[l].checked = false
 							   }
 							}
-							
 							radio.apply(this, [fields[numEl]]) 		
 						}	
 									
@@ -735,5 +861,3 @@
 				  }	       
 			}
 	   };
-	   
-	   window.history.pushState(document.url,'',document.url);
