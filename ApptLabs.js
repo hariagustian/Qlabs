@@ -13,7 +13,7 @@
 					msg_Xe : 'MsgSuccessUpdate',
 					msg_Xf : 'MsgSuccessDelete',
 					msg_Xg : 'MsgSuccessInsert',
-					msg_Xh : 'MsgSuccessSelect',
+					msg_Xh : 'MsgSuccessSelect'
 				}		
 			},
 			elementName:function(){
@@ -112,7 +112,7 @@
 		}
 		
 
-		String.prototype.urlcheck = function(char) {
+		String.prototype.urlcheck = function() {
 		    var index = this;
 			if((index.indexOf("http") > -1) === true){					
 				return index = index.substr(index.indexOf('://')+3)
@@ -317,6 +317,7 @@
 		   		self.data.arguments = Array.prototype.slice.call(arguments, 2)
 				self.data.onload = getSpot;		
 				
+				self.data.timeout = 5000;
 				if(method == 'typepost'){
 					 self.data.open('POST', url, true);
 				}else if(method == 'typeget'){
@@ -325,10 +326,28 @@
 				
 			    if(contentTyp == 'application/json;charset=UTF-8'){
 				    self.data.setRequestHeader("Content-Type", contentTyp);	
-					self.data.send(JSON.stringify(getData));				
+					self.data.send(JSON.stringify(getData));
+					self.data.ontimeout = function () {
+						if(method == 'typepost'){
+							 self.data.open('POST', url, true);
+						}else if(method == 'typeget'){
+							 self.data.open('GET', url, true);
+						}
+						self.data.setRequestHeader("Content-Type", contentTyp);
+						self.data.send(JSON.stringify(getData)); 
+					}
 				}else if (contentTyp == 'application/x-www-form-urlencoded'){		
 					self.data.setRequestHeader("Content-Type", contentTyp);	
 					self.data.send(getData);
+					self.data.ontimeout = function () {
+						if(method == 'typepost'){
+							 self.data.open('POST', url, true);
+						}else if(method == 'typeget'){
+							 self.data.open('GET', url, true);
+						}
+						self.data.setRequestHeader("Content-Type", contentTyp);	
+						self.data.send(getData);
+					}
 				}
 			}		
 									
@@ -426,6 +445,12 @@
 					}else{
 					  return element.addEventListener('keydown', funct, false);
 					}
+				   case 'keyup' :
+					if (element.attachEvent){
+					  return element.attachEvent('onkeyup', funct);
+					}else{
+					  return element.addEventListener('keyup', funct, false);
+					}
 				   case 'keypress' :
 					if (element.attachEvent){
 					  return element.attachEvent('onkeypress', funct);
@@ -497,8 +522,6 @@
 		  })(send.alpha,got.beta) 
 		}
 		
-
-
 		function parentFunc(sRespond,domParent) {
 		  var url,sRespond;
 		  if(typeof sRespond !== "undefined"){
@@ -514,7 +537,7 @@
 		  parentFunc.apply(undefined, [sRespond, domParent]);		 
 		};
 
-		String.prototype.numericValidate = function(char) {
+		String.prototype.numericValidate = function() {
 		    var index = this,re = /^\d+$/;
 	    	if(re.test(index)){
 	    		return true
@@ -524,7 +547,7 @@
     
 		};
 		
-		String.prototype.emailValidate = function(char) {				
+		String.prototype.emailValidate = function() {				
 		    var index = this,re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
 	    	if(re.test(index)){
 	    		return true
@@ -534,7 +557,7 @@
     
 		};
 		
-		String.prototype.passValidate = function(char) {				
+		String.prototype.passValidate = function() {				
 		    var index = this
 		    if (index.length >= 6){
 		    	
@@ -544,34 +567,50 @@
 	    	}
 		};	
 
-		String.prototype.zipCodeValidate = function(char) {				
+		String.prototype.zipCodeValidate = function() {				
 		    var index = this
-		    if (index.length == 5){
-		    	
+		    if (index.length == 5){	
 				return true		    
 		    }else{
 	    		return false
 	    	}
 		};			
-		String.prototype.removeUnexpectedString = function(char) {				
+		String.prototype.convertstr = function() {				
+			var index = this,newIndex = index;
+			if(newIndex.indexOf("|") > -1){
+				newIndex = newIndex.split("|").join("*sparate");
+			}
+			if(newIndex.indexOf("||") > -1){
+				newIndex = newIndex.split("||").join("*sparatesparate");
+			}
+			if(newIndex.indexOf("|||") > -1){
+				newIndex = newIndex.split("|||").join("*sparatesparatesparate");
+			}
+			if(newIndex.indexOf(".") > -1){
+				newIndex = newIndex.split(".").join("*dot");
+			}
+			if(newIndex.indexOf("-") > -1){
+				newIndex = newIndex.split("-").join("*strip");
+			}
+			return newIndex;
+		};			
+		String.prototype.removeUnexpectedString = function() {				
 			var index = this,newIndex = index;
 			if(newIndex.indexOf("script") > -1){
-				newIndex = newIndex.replace("script", "");
+				newIndex = newIndex.split("script").join("");
 			}
 			if(newIndex.indexOf("/script") > -1){
-				newIndex = newIndex.replace("/script", "");
+				newIndex = newIndex.split("/script").join("");
 			}
 			if(newIndex.indexOf("<") > -1){
-				newIndex = newIndex.replace(/</g, "");
+				newIndex = newIndex.split("<").join("");
 			}
 			if(newIndex.indexOf(">") > -1){
-				newIndex = newIndex.replace(/>/g, "");
+				newIndex = newIndex.split(">").join("");
 			}
-
-			
 			return newIndex;
-		};		
-		String.prototype.commonValidate = function(char) {				
+		};			
+		String.prototype.commonValidate = function() {				
 			var index = this,newIndex = index;
 			if(newIndex.indexOf("script") > -1){
 				return false;
@@ -601,11 +640,13 @@
 		
 		var error = {	
 			errConditions: function(element,index,getExceptional){
+				
 				aErr = new Array(),argsCondt = new Array();
-				var value =	element[index].value;
+				var value =	$.trim(element[index].value);
 				if (getExceptional != 'throughElement'){
-					if( value !== ''){
+					if(value != ''){
 						if(value.length >= 1 ){
+						  
 						  if (element[index].nodeName.toLowerCase() == el.input){						
 							if(getExceptional == 'numeric'){
 						    	if(value.numericValidate() === true){
@@ -614,6 +655,7 @@
 						    		argsCondt.push(3)
 						    	}	
 							}
+							
 							if(getExceptional == 'email'){
 						    	if(value.emailValidate() === true){
 						    		
@@ -636,6 +678,7 @@
 						    		argsCondt.push(6)
 						    	}						
 							}
+							
 							if(getExceptional == 'zipcode'){
 						    	if(value.zipCodeValidate() === true){
 									if(value.numericValidate() === true){
@@ -647,7 +690,13 @@
 						    		argsCondt.push(9)
 						    	}						
 							}
-							
+							if(getExceptional == 'phone'){
+						    	if(value.numericValidate() === true && value.length >= 6){
+						    		
+						    	}else{
+						    		argsCondt.push(10)
+						    	}	
+							}
 						  }else if(element[index].nodeName.toLowerCase() == el.select){
 								if( value != 'none'){
 								
@@ -667,6 +716,7 @@
 							argsCondt.push(2)
 						}				
 					}else{
+						
 						argsCondt.push(1)
 					}
 				}
@@ -676,7 +726,7 @@
 										
 				return{
 					elemenIndex : aErr,
-					elementCheckResult : argsCondt,
+					elementCheckResult : argsCondt
 				}
 			},
 			grab:function(element,elExceptional){
@@ -739,6 +789,9 @@
 								case 9:									
 									msgAppend.push($$.message_Zu),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
 									break
+								case 10:									
+									msgAppend.push($$.message_zH),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+									break	
 							}
 						}
 					}else{
