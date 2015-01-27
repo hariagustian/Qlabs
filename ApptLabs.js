@@ -13,7 +13,9 @@
 					msg_Xe : 'MsgSuccessUpdate',
 					msg_Xf : 'MsgSuccessDelete',
 					msg_Xg : 'MsgSuccessInsert',
-					msg_Xh : 'MsgSuccessSelect'
+					msg_Xh : 'MsgSuccessSelect',
+					msg_Xi : 'Jaringan terganggu, membangun koneksi ... ',
+					msg_Xj : 'Permintaan tampaknya akan sedikit lama ...'
 				}		
 			},
 			elementName:function(){
@@ -299,14 +301,14 @@
  		var json = new Array;		
 		function sendpost(){
 			var contentType = ["application/json;charset=UTF-8","application/x-www-form-urlencoded"]
-			function getSpot () {
-				this.callback.apply(this, this.arguments) 
-			}
-
+			pTimeOut = $('#long-splash');
+			
+			
+			
 			function postType(getFunction,url,getData,handler,contentTyp,method){			
 			    var data = false;
 			    var self = getFunction;
-			    
+			    var srvObj = Object.create(qwertLabs.serverResponse())
 			 	if (window.XMLHttpRequest) {
 			 	 self.data = new XMLHttpRequest();
 			 	}else {
@@ -315,9 +317,28 @@
 			 	
 		        self.data.callback = handler
 		   		self.data.arguments = Array.prototype.slice.call(arguments, 2)
-				self.data.onload = getSpot;		
-				
-				self.data.timeout = 5000;
+				self.data.onerror = function(e) {
+					pTimeOut.find('abbr').html(srvObj.msg_Xi)
+					pTimeOut.fadeIn( 100 );
+					if(method == 'typepost'){
+						 self.data.open('POST', url, true);
+					}else if(method == 'typeget'){
+						 self.data.open('GET', url, true);
+					}
+					self.data.setRequestHeader("Content-Type", contentTyp);
+					self.data.send(JSON.stringify(getData)); 
+				};
+				self.data.onload = function () {
+					//if (this.status >= 200 && this.status < 304) {
+						this.callback.apply(this, this.arguments);
+						pTimeOut.fadeOut( 1000);
+					//} else {
+					
+					//}
+					
+				};		
+						
+				self.data.timeout = 500;
 				if(method == 'typepost'){
 					 self.data.open('POST', url, true);
 				}else if(method == 'typeget'){
@@ -328,29 +349,38 @@
 				    self.data.setRequestHeader("Content-Type", contentTyp);	
 					self.data.send(JSON.stringify(getData));
 					self.data.ontimeout = function () {
-						if(method == 'typepost'){
-							 self.data.open('POST', url, true);
-						}else if(method == 'typeget'){
-							 self.data.open('GET', url, true);
+						if (this.status == 0) {
+							pTimeOut.find('abbr').html(srvObj.msg_Xj)
+							pTimeOut.fadeIn( 100 );
+							if(method == 'typepost'){
+								 self.data.open('POST', url, true);
+							}else if(method == 'typeget'){
+								 self.data.open('GET', url, true);
+							}
+							self.data.setRequestHeader("Content-Type", contentTyp);
+							self.data.send(JSON.stringify(getData)); 
 						}
-						self.data.setRequestHeader("Content-Type", contentTyp);
-						self.data.send(JSON.stringify(getData)); 
 					}
 				}else if (contentTyp == 'application/x-www-form-urlencoded'){		
 					self.data.setRequestHeader("Content-Type", contentTyp);	
 					self.data.send(getData);
 					self.data.ontimeout = function () {
-						if(method == 'typepost'){
-							 self.data.open('POST', url, true);
-						}else if(method == 'typeget'){
-							 self.data.open('GET', url, true);
+						if (this.status == 0) {
+							pTimeOut.find('abbr').html(srvObj.msg_Xj)
+							pTimeOut.fadeIn( 100 );
+						
+							if(method == 'typepost'){
+								 self.data.open('POST', url, true);
+							}else if(method == 'typeget'){
+								 self.data.open('GET', url, true);
+							}
+							self.data.setRequestHeader("Content-Type", contentTyp);	
+							self.data.send(getData);
 						}
-						self.data.setRequestHeader("Content-Type", contentTyp);	
-						self.data.send(getData);
 					}
 				}
 			}		
-									
+			
 			return{
 				alpha:function (geturl,sendData,alphaHandler) {
 				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof alphaHandler !== "undefined"){	
@@ -591,6 +621,9 @@
 			}
 			if(newIndex.indexOf("-") > -1){
 				newIndex = newIndex.split("-").join("*strip");
+			}
+			if(newIndex.indexOf(",") > -1){
+				newIndex = newIndex.split(",").join("*comma");
 			}
 			return newIndex;
 		};			
