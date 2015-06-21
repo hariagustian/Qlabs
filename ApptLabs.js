@@ -1,27 +1,47 @@
-﻿		qwertLabs = {
-			data:function(){
-				return{
-					url: "http://localhost/laravel/toko/toko/public/admin/json"			
-				}
-			},
-			serverResponse:function(){
-				return {
-					msg_Xa : 'MsgFailPasswordIsWrong',
-					msg_Xb : 'MsgFailUserNotRegistered',
-					msg_Xc : 'MsgAuthISuccess',
-					msg_Xd : 'MsgFailAlreadyExist',
-					msg_Xe : 'MsgSuccessUpdate',
-					msg_Xf : 'MsgSuccessDelete',
-					msg_Xg : 'MsgSuccessInsert',
-					msg_Xh : 'MsgSuccessSelect',
-					msg_Xi : 'Jaringan terganggu, membangun koneksi ... ',
-					msg_Xj : 'Permintaan tampaknya akan sedikit lama ...'
-				}		
+﻿	Object.build = function(o) {
+		var initArgs = Array.prototype.slice.call(arguments,1)
+		function F() {
+		  if((typeof o.init === 'function') && initArgs.length) {
+			 o.init.apply(this,initArgs)
+		  }
+		}
+		F.prototype = o
+		return new F()
+	}
+		
+	//http://128.199.222.190/address/json
+	//http://localhost/laravel/vidinvite/vidinvite/public/address/json
+	String.prototype.IsJson = function() {
+		var index = this
+		try {
+			JSON.parse(index);
+		} catch (e) {
+			return false;
+		}
+		return true;
+	};
+
+	
+	qlabs = {
+			data:{
+				url:'http://localhost/laravel/vidinvite/vidinvite/public/address/json',
+				responseGlossary:[
+					'loginTrue','loginFalse','unregisteredEmail',
+					'insertTrue','insertFalse','sessionFalse',
+					'deleteTrue','deleteFalse','deleteNull','updateTrue',
+					'updateFalse','resetTrue','resetNull','resetSuccess'
+				],
+				msgGlossary:{
+						ajaxTimeOut:'Jaringan terganggu, membangun koneksi ... ',
+						ajaxReconnect:'Permintaan tampaknya akan sedikit lama ...'
+					},
+				contentType:["application/json;charset=UTF-8","application/x-www-form-urlencoded"]
 			},
 			elementName:function(){
 				return{
 					input 	: 'input',
 					button 	: 'button',
+					textarea: 'textarea',
 					select 	: 'select',
 					li 		: 'li',
 					ul 		: 'ul',
@@ -32,9 +52,371 @@
 					a		: 'a',
 					str     : '~inavP'
 				}
+			},
+			error:{	
+				errConditions: function(element,index,getExceptional){
+					
+					aErr = new Array(),argsCondt = new Array();
+					var value =	$.trim(element[index].value);
+					if (getExceptional != 'throughElement'){
+						if(value != ''){
+							if(value.length >= 1 ){
+							  
+							  if (element[index].nodeName.toLowerCase() == el.input){						
+								if(getExceptional == 'numeric'){
+									if(value.numericValidate() === true){
+										
+									}else{
+										argsCondt.push(3)
+									}	
+								}
+								
+								if(getExceptional == 'email'){
+									if(value.emailValidate() === true){
+										
+									}else{
+										argsCondt.push(4)
+									}						
+								}
+								if(getExceptional == 'password'){
+									if(value.passValidate() === true){
+										passDumpt.push(value)
+										if(passDumpt.length === 2){
+											if(passDumpt[0] == passDumpt[1]){
+												
+											}else{
+												argsCondt.push(7)
+											}
+										}
+										
+									}else{
+										argsCondt.push(6)
+									}						
+								}
+								
+								if(getExceptional == 'zipcode'){
+									if(value.zipCodeValidate() === true){
+										if(value.numericValidate() === true){
+											
+										}else{
+											argsCondt.push(3)
+										}	
+									}else{
+										argsCondt.push(9)
+									}						
+								}
+								if(getExceptional == 'phone'){
+									if(value.numericValidate() === true && value.length >= 6){
+										
+									}else{
+										argsCondt.push(10)
+									}	
+								}
+							  }else if(element[index].nodeName.toLowerCase() == el.select){
+									if( value != 'none'){
+									
+									}else{
+										argsCondt.push(5)
+									}
+							  }
+							  
+							 if(getExceptional !== 'password'){
+									if(value.commonValidate() === true){
+									
+									}else{
+										argsCondt.push(8)
+									}
+							 }
+							}else{
+								argsCondt.push(2)
+							}				
+						}else{
+							
+							argsCondt.push(1)
+						}
+					}
+					
+					if (element[index].nodeType === 1)		
+						aErr.push(element[index].nodeName.toLowerCase());
+											
+					return{
+						elemenIndex : aErr,
+						elementCheckResult : argsCondt
+					}
+				},
+				grab:function(element,elExceptional){
+					dumpRst = []
+					passDumpt.length = 0;
+					if (elExceptional !== null){
+						for (var index = 0; index < element.length; index++){
+							dumpRst.push(qlabs.error.errConditions.call(this,element,index,elExceptional[index]));
+						}				  		 
+					}else{
+						for (var index = 0; index < element.length; index++){
+							dumpRst.push(qlabs.error.errConditions.call(this,element,index,null))
+						}
+					}
+					return dumpRst;
+							
+				},
+				handler:function(objElement,domParent,fieldName,customMsg){
+					var j=0, elmnt, createEl, elParentName = domParent.nodeName.toLowerCase();
+					msgAppend = [], nameAppend = [], reCheck =[], typeElement =[];
+					
+					if(elParentName == el.ul)
+					  createEl = el.li;
+					else if(elParentName == el.div || elParentName == el.p || elParentName == el.span)
+					  createEl = el.span;
+					else
+					  createEl = el.label;
+									
+					do {	
+						if (objElement[j].elementCheckResult.length !== 0){
+							conditions = objElement[j].elementCheckResult; 
+							for (var x=0;x<conditions.length;x++){
+								switch(conditions[x]){
+									case 1:
+										msgAppend.push($$.message_Xc),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+										break
+									case 2:
+										msgAppend.push($$.message_Xd),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+										break										
+									case 3:
+										msgAppend.push($$.message_Xe),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+										break
+									case 4:
+										msgAppend.push($$.message_Xf),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+										break
+									case 5:									
+										msgAppend.push($$.message_Xg),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+										break
+									case 6:									
+										msgAppend.push($$.message_Xh),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+										break
+									case 7:									
+										msgAppend.push($$.message_Xj),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+										break
+									case 8:									
+										msgAppend.push($$.message_zL),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+										break
+									case 9:									
+										msgAppend.push($$.message_Zu),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+										break
+									case 10:									
+										msgAppend.push($$.message_zH),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
+										break
+									case 11:									
+										msgAppend.push(customMsg),nameAppend.push(fieldName[j]),typeElement.push(createEl)
+										break
+								}
+							}
+						}else{
+							reCheck.push(objElement[j].elementCheckResult.length)
+						}
+											
+						j++
+					}
+					while (j < objElement.length);	
+					if (reCheck.length === objElement.length){
+					
+						if(domParent.parentNode.style.display == "block")
+							domParent.parentNode.style.display = "none";
+						
+						if (domParent.style.display == "block")
+							domParent.style.display = "none";
+
+						return true
+					}else{
+						appendObjectInArray.call(this,typeElement,msgAppend,domParent,nameAppend);
+					}	
+		
+				}
+			},
+			read:{
+				json:function(respond){
+					var element
+					return JSON && JSON.parse(respond) || $.parseJSON(respond)
+				}
+			},
+			serverResponse:function(args,bool,activeEl,activeElHtml){
+				var readJsn = qlabs.read.json, rspGlossry = qlabs.data.responseGlossary
+				function statusResponse(status,element){
+					var arrExeceptionsMsg = ['insertTrue','loginTrue','deleteTrue','updateTrue','resetTrue','resetSuccess'], exception = false;
+					//parent default
+					var domParent = document.getElementById('alert-error'),customMsg,
+						domSuccessParent = document.getElementById('alert-success');
+
+					if(status === 'loginFalse')
+						customMsg = $$.msgLoginFalse;
+					else if(status === 'unregisteredEmail')
+						customMsg = $$.unregisteredEmail;
+					else if(status === 'insertFalse')
+						customMsg = $$.insertFail;
+					else if(status === 'sessionFalse')
+						customMsg = $$.sessionFalse, location.reload();
+					else if(status === 'updateFalse')
+						customMsg = $$.updateFalse;	
+					else if(status === 'deleteNull')
+						customMsg = $$.deleteNull;
+					else if(status === 'insertTrue')
+						customMsg = $$.insertTrue;
+					else if(status === 'resetTrue')
+						customMsg = $$.resetTrue;
+					else if(status === 'resetNull')
+						customMsg = $$.resetNull;	
+					else if(status === 'resetSuccess')
+						customMsg = $$.resetSuccess;	
+					else if(status === 'loginTrue')
+						customMsg = $$.loginTrue;	
+					
+					for(var index = 0; index<arrExeceptionsMsg.length;index++){
+						if(status == arrExeceptionsMsg[index]){
+							var exception = true
+							appendObject(el.span, customMsg, domSuccessParent, '')
+							break;
+						}
+					}
+					
+					if(exception === false){
+						qlabs.error.handler([{
+								elemenIndex : ['true'],
+								elementCheckResult : [11]}],
+								domParent,[''],
+								customMsg
+						)
+					}
+					
+				}
+				
+				
+				if(args.responseText.IsJson() === true){
+						var getResponse = readJsn(args.responseText);
+						var glossary = rspGlossry;
+						for(var index=0,len = glossary.length;index<len;index++){
+							if(getResponse.serverResponse == glossary[index]){
+								statusResponse.call(this,glossary[index],activeEl) 
+							}
+						}
+					return getResponse.serverResponse;
+				}else{
+					//inValid responseText not Json Object
+				}
+			},
+			ajax:{
+				ajaxLib:function(getFunction,url,getData,handler,contentTyp,method){
+					pTimeOut = $('#long-splash');			
+					var data = false;
+					var self = getFunction;
+
+					if (window.XMLHttpRequest) {
+						self.data = new XMLHttpRequest();
+					}else {
+						self.data = new ActiveXObject("Microsoft.XMLHTTP");
+					} 
+					
+					self.data.callback = handler
+					self.data.arguments = Array.prototype.slice.call(arguments, 2)
+					self.data.onerror = function(e) {
+						pTimeOut.find('abbr').html(msg.ajaxReconnect)
+						pTimeOut.fadeIn( 100 );
+						
+						if(method == 'typepost')
+							 self.data.open('POST', url, true);
+						else if(method == 'typeget')
+							 self.data.open('GET', url, true);
+						
+						self.data.setRequestHeader("Content-Type", contentTyp);
+						self.data.send(JSON.stringify(getData)); 
+					};
+					self.data.onload = function () {
+						this.callback.apply(this, this.arguments);
+						pTimeOut.fadeOut( 1000);
+						
+					};		
+
+					self.data.timeout = 1000;
+					if(method == 'typepost'){
+						 self.data.open('POST', url, true);
+					}else if(method == 'typeget'){
+						 self.data.open('GET', url, true);
+					}
+
+					if(contentTyp == 'application/json;charset=UTF-8'){
+						self.data.setRequestHeader('X-CSRF-TOKEN', VidLib.token())
+						self.data.setRequestHeader("Content-Type", contentTyp);	
+						self.data.send(JSON.stringify(getData));
+						
+						self.data.ontimeout = function () {
+							if(JSON.stringify(getData).indexOf("insert") > -1){
+								//do nothing
+							}else{
+								if (this.status == 0) {
+									pTimeOut.find('abbr').html(msg.ajaxTimeOut)
+									pTimeOut.fadeIn( 100 );
+									if(method == 'typepost'){
+										 self.data.open('POST', url, true);
+									}else if(method == 'typeget'){
+										 self.data.open('GET', url, true);
+									}
+									self.data.setRequestHeader("Content-Type", contentTyp);
+									self.data.send(JSON.stringify(getData)); 		
+								}
+							}
+						
+						}
+					}else if (contentTyp == 'application/x-www-form-urlencoded'){		
+						self.data.setRequestHeader("Content-Type", contentTyp);	
+						self.data.send(getData);
+						self.data.ontimeout = function () {
+							if(JSON.stringify(getData).indexOf("insert") > -1){
+								//do nothing
+							}else{
+								if (this.status == 0) {
+									pTimeOut.find('abbr').html(msg.ajaxReconnect)
+									pTimeOut.fadeIn( 100 );
+								
+									if(method == 'typepost'){
+										 self.data.open('POST', url, true);
+									}else if(method == 'typeget'){
+										 self.data.open('GET', url, true);
+									}
+									self.data.setRequestHeader("Content-Type", contentTyp);	
+									self.data.send(getData);
+								}
+							}
+						}
+					}		
+				},
+				alpha:function (geturl,sendData,alphaHandler) {
+					if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof alphaHandler !== "undefined"){	
+						qlabs.ajax.ajaxLib.apply(this,[this,geturl,sendData,alphaHandler, qlabs.data.contentType[0],'typepost'],this.responseText)														 							    			    
+					}	
+
+				},
+				zeta:function (geturl,sendData,zetaHandler) {
+					if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof zetaHandler !== "undefined"){					   
+						qlabs.ajax.ajaxLib.apply(this,[this,geturl,sendData,zetaHandler, qlabs.data.contentType[1],'typepost'])														 							    			    
+					}		   		
+				},
+				eta:function (geturl,sendData,etaHandler) {
+					if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof etaHandler !== "undefined"){					   
+						qlabs.ajax.ajaxLib.apply(this,[this,geturl,sendData,etaHandler, qlabs.data.contentType[1],'typeget'])														 							    			    
+					}		   		
+				},
+				ommega:function(geturl,sendData,alphaHandler){
+					if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof alphaHandler !== "undefined"){
+																
+					}
+										 
+				}		
 			}
 		}
-		
+	
+	qlabs = Object.build(qlabs);
+	var msg = qlabs.data.msgGlossary
+	var postJson = qlabs.ajax.alpha
+	var getJson = qlabs.ajax.eta
+	
 		function prependObject(element, message, parentelement){
 				switch (element.toLowerCase()){
 					case 'label': element = document.createElement('label');break
@@ -257,183 +639,24 @@
 			
 			}
 		}
+		
+		filter = {
+			ByClass : function(elements,nameOfClass,elName){
+				classElemnts = []
+				var elArr = getallof.element([],elements,[elName],[elName]);
+				for (var index = 0; index < elArr.length;index++){
 				
-		function customcapca(){
-		  return {
-		  		validate : function (container,containerError) {
-					capcaSpan = new Array(),capcaInput = new Array()
-					var getCapcaVariables = retrieveelementvalue(capcaSpan, container.getElementsByTagName('span'),'innerHTML')
-					var getCapcaInput = retrieveelement(capcaInput, container.getElementsByTagName('input'))
-					var getCapcaSpan = retrieveelement(capcaInput, container.getElementsByTagName('span'))		
-					var sum = getCapcaVariables.slice(0,-2)
-					switch (sum[1]){
-						case '+':sum = parseInt(sum[0]) + parseInt(sum[2]),operator = 'Penjumlahan';break;
-						case '-':sum = parseInt(sum[0]) - parseInt(sum[2]),operator = 'Pengurangan';break;
-						case '*':sum = parseInt(sum[0]) * parseInt(sum[2]),operator = 'Perkalian';break;						
-					}
-					if (getCapcaInput[0].value != ''){
-						if (parseInt(getCapcaInput[0].value) === sum){
-							getCapcaInput[0].disabled=true;
-							return true;
-						}else{						
-							getCapcaInput[0].value = "";
-							prependObject('label',''+operator+' salah !',containerError)
-								getCapcaInput[1].innerHTML = random.customRange(10)
-								var arrayOperator = new Array(),arrayOperator = ['+','-','*']
-								getCapcaInput[2].innerHTML = arrayOperator[random.array(arrayOperator)]
-								getCapcaInput[3].innerHTML = random.customRange(10)
-							return false;						
-						}
-					}else{					
-						getCapcaInput[0].focus()
-						prependObject('label','Capcanya tidak boleh kosong!',containerError)
-						return false;						
-					}
-				},
-				loadcapca : function(array){
-					array[0].innerHTML = random.customRange(10)
-					var loadOperator = new Array(),loadOperator = ['+','-','*']
-					array[1].innerHTML = loadOperator[random.array(loadOperator)]
-					array[2].innerHTML = random.customRange(10)						
-				}			
-		  }					
-		}
- 		var json = new Array;		
-		function sendpost(){
-			var contentType = ["application/json;charset=UTF-8","application/x-www-form-urlencoded"]
-			pTimeOut = $('#long-splash');
-			
-			
-			
-			function postType(getFunction,url,getData,handler,contentTyp,method){			
-			    var data = false;
-			    var self = getFunction;
-			    var srvObj = Object.create(qwertLabs.serverResponse())
-			 	if (window.XMLHttpRequest) {
-			 	 self.data = new XMLHttpRequest();
-			 	}else {
-			     self.data = new ActiveXObject("Microsoft.XMLHTTP");
-			 	} 
-			 	
-		        self.data.callback = handler
-		   		self.data.arguments = Array.prototype.slice.call(arguments, 2)
-				self.data.onerror = function(e) {
-					pTimeOut.find('abbr').html(srvObj.msg_Xi)
-					pTimeOut.fadeIn( 100 );
-					if(method == 'typepost'){
-						 self.data.open('POST', url, true);
-					}else if(method == 'typeget'){
-						 self.data.open('GET', url, true);
-					}
-					self.data.setRequestHeader("Content-Type", contentTyp);
-					self.data.send(JSON.stringify(getData)); 
-				};
-				self.data.onload = function () {
-					//if (this.status >= 200 && this.status < 304) {
-						this.callback.apply(this, this.arguments);
-						pTimeOut.fadeOut( 1000);
-					//} else {
-					
-					//}
-					
-				};		
-						
-				self.data.timeout = 500;
-				if(method == 'typepost'){
-					 self.data.open('POST', url, true);
-				}else if(method == 'typeget'){
-					 self.data.open('GET', url, true);
-				}
-				
-			    if(contentTyp == 'application/json;charset=UTF-8'){
-				    self.data.setRequestHeader("Content-Type", contentTyp);	
-					self.data.send(JSON.stringify(getData));
-					self.data.ontimeout = function () {
-						if (this.status == 0) {
-							pTimeOut.find('abbr').html(srvObj.msg_Xj)
-							pTimeOut.fadeIn( 100 );
-							if(method == 'typepost'){
-								 self.data.open('POST', url, true);
-							}else if(method == 'typeget'){
-								 self.data.open('GET', url, true);
-							}
-							self.data.setRequestHeader("Content-Type", contentTyp);
-							self.data.send(JSON.stringify(getData)); 
-						}
-					}
-				}else if (contentTyp == 'application/x-www-form-urlencoded'){		
-					self.data.setRequestHeader("Content-Type", contentTyp);	
-					self.data.send(getData);
-					self.data.ontimeout = function () {
-						if (this.status == 0) {
-							pTimeOut.find('abbr').html(srvObj.msg_Xj)
-							pTimeOut.fadeIn( 100 );
-						
-							if(method == 'typepost'){
-								 self.data.open('POST', url, true);
-							}else if(method == 'typeget'){
-								 self.data.open('GET', url, true);
-							}
-							self.data.setRequestHeader("Content-Type", contentTyp);	
-							self.data.send(getData);
-						}
+					if(elArr[index].className == nameOfClass){
+						classElemnts.push(elArr[index])
 					}
 				}
-			}		
-			
-			return{
-				alpha:function (geturl,sendData,alphaHandler) {
-				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof alphaHandler !== "undefined"){	
-				    	postType.apply(this,[this,geturl,sendData,alphaHandler,contentType[0],'typepost'])														 							    			    
-				 	}				 						    
-		   		},
-		   		zeta:function (geturl,sendData,zetaHandler) {
-				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof zetaHandler !== "undefined"){					   
-				    	postType.apply(this,[this,geturl,sendData,zetaHandler,contentType[1],'typepost'])														 							    			    
-				 	}		   		
-		   		},
-		   		eta:function (geturl,sendData,etaHandler) {
-				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof etaHandler !== "undefined"){					   
-				    	postType.apply(this,[this,geturl,sendData,etaHandler,contentType[1],'typeget'])														 							    			    
-				 	}		   		
-		   		},
-		   		ommega:function(geturl,sendData,alphaHandler){
-				    if (typeof geturl !== "undefined" && typeof sendData !== "undefined" && typeof alphaHandler !== "undefined"){
-					   						    			    
-				 	}
-				    					 
-				}
-			}	
-		}
-
-		function getpost(){
-		    var element
-			return{
-				beta:function(respond){
- 	 	   			return JSON && JSON.parse(respond) || $.parseJSON(respond)
-				}
+				return classElemnts;
 			}
 		}
-			
-	  function setCookie(c_name,value,exdays){
-	      var exdate=new Date();
-	      exdate.setDate(exdate.getDate() + exdays);
-	      var c_value=escape(value) + 
-	        ((exdays==null) ? "" : ("; expires="+exdate.toUTCString()));
-	      document.cookie=c_name + "=" + c_value;
-	    }
-	
-	   function getCookie(c_name){
-	     var i,x,y,ARRcookies=document.cookie.split(";");
-	     for (i=0;i<ARRcookies.length;i++){
-		      x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
-		      y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
-		      x=x.replace(/^\s+|\s+$/g,"");
-		      if (x==c_name){
-		       return unescape(y);
-		      }
-	     }		
-	 	} 
+		
+		var filter = Object.build(filter)
+		
+		
 		function attachlistener(){
 		   return {
 		      add: function(element, evnt, funct){
@@ -509,19 +732,34 @@
 			     } 
 		  	  },
 		  	  off:function(element){
-		  	  	xFunc.disabled.apply (xFunc, [element]);
+				 if(element instanceof Array == false){
+					var element = [element]
+				 }
+					xFunc.disabled.apply (xFunc, [element]);
 		  	  },
 		  	  on:function(element){
-		  	  	xFunc.enabled.apply (xFunc, [element]);
+				if(element instanceof Array == false){
+					var element = [element]
+				 }
+					xFunc.enabled.apply (xFunc, [element]);
 		  	  },
 		  	  hide:function(element){
-		  	  	xFunc.none.apply (xFunc, [element]);
+				if(element instanceof Array == false){
+					var element = [element]
+				 }
+					xFunc.none.apply (xFunc, [element]);
 		  	  },
 		  	  unhide:function(element){
-		  	  	xFunc.block.apply (xFunc, [element]);
+				if(element instanceof Array == false){
+					var element = [element]
+				 }
+					xFunc.block.apply (xFunc, [element]);
 		  	  },
 			  getText:function(element){
-				return xFunc.text.apply (xFunc, [element]);
+				if(element instanceof Array == false){
+					var element = [element]
+				 }
+					return xFunc.text.apply (xFunc, [element]);
 			  },
 		  	  pushUrl:function(serverResponse,targetUrl){
 				var now = new Date();
@@ -540,7 +778,12 @@
 		  	} 
 		}
 		
-		var getallof = new retrievemultitypeofelement(),random = new randomstr(),customcapca = new customcapca(),send = new sendpost(),got = new getpost(),listener = new attachlistener(),validate = new parentFunc(),urlH = new qwertLabs.data().url, srvRsnp = Object.create(qwertLabs.serverResponse()),el = Object.create(qwertLabs.elementName())
+		var getallof = new retrievemultitypeofelement(),
+			random = new randomstr(),
+			listener = new attachlistener(),
+			urlH = qlabs.data.url, 
+			el = Object.build(qlabs.elementName())
+			
 
 		window.$$= null;	
 		var constructLab = {
@@ -549,9 +792,10 @@
 				 $$ = args.call(this,this.responseText)
 				 
 			}])			
-		  })(send.alpha,got.beta) 
+		  })(getJson,qlabs.read.json) 
 		}
 		
+		/*
 		function parentFunc(sRespond,domParent) {
 		  var url,sRespond;
 		  if(typeof sRespond !== "undefined"){
@@ -566,6 +810,7 @@
 		parentFunc.prototype.checking = function (sRespond, domParent) {
 		  parentFunc.apply(undefined, [sRespond, domParent]);		 
 		};
+		*/
 
 		String.prototype.numericValidate = function() {
 		    var index = this,re = /^\d+$/;
@@ -590,7 +835,6 @@
 		String.prototype.passValidate = function() {				
 		    var index = this
 		    if (index.length >= 6){
-		    	
 				return true		    
 		    }else{
 	    		return false
@@ -659,196 +903,8 @@
     
 		};
 		
-		String.prototype.IsJson = function() {
-			var index = this
-			try {
-				JSON.parse(index);
-			} catch (e) {
-				return false;
-			}
-			return true;
-		};
-		
 		passDumpt = new Array();
 		
-		var error = {	
-			errConditions: function(element,index,getExceptional){
-				
-				aErr = new Array(),argsCondt = new Array();
-				var value =	$.trim(element[index].value);
-				if (getExceptional != 'throughElement'){
-					if(value != ''){
-						if(value.length >= 1 ){
-						  
-						  if (element[index].nodeName.toLowerCase() == el.input){						
-							if(getExceptional == 'numeric'){
-						    	if(value.numericValidate() === true){
-						    		
-						    	}else{
-						    		argsCondt.push(3)
-						    	}	
-							}
-							
-							if(getExceptional == 'email'){
-						    	if(value.emailValidate() === true){
-						    		
-						    	}else{
-						    		argsCondt.push(4)
-						    	}						
-							}
-							if(getExceptional == 'password'){
-						    	if(value.passValidate() === true){
-						    		passDumpt.push(value)
-						    		if(passDumpt.length === 2){
-						    			if(passDumpt[0] == passDumpt[1]){
-						    				
-						    			}else{
-						    				argsCondt.push(7)
-						    			}
-						    		}
-						    		
-						    	}else{
-						    		argsCondt.push(6)
-						    	}						
-							}
-							
-							if(getExceptional == 'zipcode'){
-						    	if(value.zipCodeValidate() === true){
-									if(value.numericValidate() === true){
-										
-									}else{
-										argsCondt.push(3)
-									}	
-						    	}else{
-						    		argsCondt.push(9)
-						    	}						
-							}
-							if(getExceptional == 'phone'){
-						    	if(value.numericValidate() === true && value.length >= 6){
-						    		
-						    	}else{
-						    		argsCondt.push(10)
-						    	}	
-							}
-						  }else if(element[index].nodeName.toLowerCase() == el.select){
-								if( value != 'none'){
-								
-								}else{
-									argsCondt.push(5)
-								}
-						  }
-						  
-						 if(getExceptional !== 'password'){
-								if(value.commonValidate() === true){
-								
-								}else{
-									argsCondt.push(8)
-								}
-						 }
-						}else{
-							argsCondt.push(2)
-						}				
-					}else{
-						
-						argsCondt.push(1)
-					}
-				}
-				
-				if (element[index].nodeType === 1)		
-					aErr.push(element[index].nodeName.toLowerCase());
-										
-				return{
-					elemenIndex : aErr,
-					elementCheckResult : argsCondt
-				}
-			},
-			grab:function(element,elExceptional){
-				dumpRst = []
-				passDumpt.length = 0;
-				
-				if (elExceptional !== null){
-					for (var index = 0; index < element.length; index++){
-						dumpRst.push(error.errConditions.call(this,element,index,elExceptional[index]));
-					}				  		 
-				}else{
-					for (var index = 0; index < element.length; index++){
-						dumpRst.push(error.errConditions.call(this,element,index,null))
-					}
-				}
-				return dumpRst;
-						
-			},
-			handler:function(objElement,domParent,fieldName){
-				var j=0, elmnt, createEl, elParentName = domParent.nodeName.toLowerCase();
-				msgAppend = [], nameAppend = [], reCheck =[], typeElement =[];
-				
-				if(elParentName == el.ul)
-				  createEl = el.li;
-				else if(elParentName == el.div || elParentName == el.p || elParentName == el.span)
-				  createEl = el.span;
-				else
-				  createEl = el.label;
-				  
-				do {	
-											
-					if (objElement[j].elementCheckResult.length !== 0){
-					  	conditions = objElement[j].elementCheckResult; 
-						for (var x=0;x<conditions.length;x++){
-							switch(conditions[x]){
-								case 1:
-									msgAppend.push($$.message_Xc),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break
-								case 2:
-									msgAppend.push($$.message_Xd),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break										
-								case 3:
-									msgAppend.push($$.message_Xe),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break
-								case 4:
-									msgAppend.push($$.message_Xf),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break
-								case 5:									
-									msgAppend.push($$.message_Xg),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break
-								case 6:									
-									msgAppend.push($$.message_Xh),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break
-								case 7:									
-									msgAppend.push($$.message_Xj),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break
-								case 8:									
-									msgAppend.push($$.message_zL),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break
-								case 9:									
-									msgAppend.push($$.message_Zu),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break
-								case 10:									
-									msgAppend.push($$.message_zH),nameAppend.push(fieldName[j]),typeElement.push(createEl) 
-									break	
-							}
-						}
-					}else{
-						reCheck.push(objElement[j].elementCheckResult.length)
-					}
-										
-				    j++
-				}
-				while (j < objElement.length);	
-				if (reCheck.length === objElement.length){
-				
-					if(domParent.parentNode.style.display == "block")
-						domParent.parentNode.style.display = "none";
-					
-					if (domParent.style.display == "block")
-						domParent.style.display = "none";
-
-					return true
-				}else{
-					appendObjectInArray.call(this,typeElement,msgAppend,domParent,nameAppend);
-				}	
-	
-			}	
-		}
 		multi ={
 			check:function(fields,check){
 				var k = 0,l = 0;									
@@ -898,7 +954,8 @@
 			},
 			checkbox:function(checkbox){
 				var j = 0;
-				checkboxArr = []
+				checkboxArr = [];
+				
 				do{
 					if (checkbox[j].checked ==  true){
 						checkboxArr.push(checkbox[j])
@@ -907,6 +964,16 @@
 				}
 				while(j < checkbox.length)			
 				return checkboxArr
+			},checkboxVal:function(checkboxArr){
+				var selectedCheckbox = single.checkbox(checkboxArr), selectedVal = [];
+				for(var key in selectedCheckbox){
+					if( selectedCheckbox.hasOwnProperty(key)) {
+						if(selectedCheckbox[key].value !== 'on')
+							selectedVal.push(selectedCheckbox[key].value);
+					}
+				}
+				
+				return selectedVal;
 			},
 			select:function(fields,select){
 				var l = 0;
@@ -924,26 +991,49 @@
 		}
 			
 	    var callselectortags = {		
-			construct:function(element,select,getValueType,booleaN) {
-				  switch(getValueType){
-				    case null:	
-					    body = document.body,array = new Array();
-						if(false === booleaN)
-							return getallof.element(array,body,element,select);
-						else if(true === booleaN)
-						    return getallof.rollback(),getallof.element(array,body,element,select);
-					case 'innerHTML':
-					    body = document.body,array = new Array();
-						if(false === booleaN)
-							return getallof.elementInnerHTML(array,body,element,select);
-						else if(true === booleaN)
-						    return getallof.rollback(),getallof.elementInnerHTML(array,body,element,select);
-					case 'Value':
-					    body = document.body,array = new Array();
-						if(false === booleaN)
-							return getallof.elementValue(array,body,element,select);
-						else if(true === booleaN)
-						    return getallof.rollback(),getallof.elementValue(array,body,element,select);							    			    
-				  }	       
+			process:function(parent,arrElement,arrFieldName,arrExceptional,btn,handler){
+				listener.add(btn,'do',function () {
+					//set parent default
+					if(parent == null) domParent = document.getElementById('alert-error');
+					else domParent = parent;
+					
+					fieldName			= arrFieldName;			
+					fieldExceptional    = arrExceptional;
+					fieldElement 		= arrElement;
+					getResult			= qlabs.error.grab(fieldElement,fieldExceptional)				
+					isBoolean			= qlabs.error.handler(getResult,domParent,fieldName)	
+				
+					handler.call(this,isBoolean);
+				})
+			},
+			get:{
+				element:function(parent,elName){
+					if(elName instanceof Array)
+						return getallof.element([],parent,elName,elName);
+					else
+						return getallof.element([],parent,[elName],[elName]);
+				},
+				value:function(parent,elName){
+					if(elName instanceof Array)
+						return getallof.elementValue([],parent,elName,elName);
+					else	
+						return getallof.elementValue([],parent,[elName],[elName]);
+				}
 			}
 	   };
+
+	   var qobj = Object.build(callselectortags);
+		
+		function id(name){
+			var getIdElement = document.getElementById(name)
+			return getIdElement;
+		}
+
+		var delay = (function(){
+		  var timer = 0;
+		  return function(callback, ms){
+			clearTimeout (timer);
+			timer = setTimeout(callback, ms);
+		  };
+		})();
+
