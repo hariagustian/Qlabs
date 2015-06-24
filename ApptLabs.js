@@ -29,11 +29,14 @@
 					'loginTrue','loginFalse','unregisteredEmail',
 					'insertTrue','insertFalse','sessionFalse',
 					'deleteTrue','deleteFalse','deleteNull','updateTrue',
-					'updateFalse','resetTrue','resetNull','resetSuccess'
+					'updateFalse','resetTrue','resetNull','resetSuccess',
+					'vendorDataTrue'
 				],
 				msgGlossary:{
 						ajaxTimeOut:'Jaringan terganggu, membangun koneksi ... ',
-						ajaxReconnect:'Permintaan tampaknya akan sedikit lama ...'
+						ajaxReconnect:'Permintaan tampaknya akan sedikit lama ...',
+						loading:'loading',
+						tokenMis:'Sesi anda tela kadaluarsa kami akan merefresh laman ini'
 					},
 				contentType:["application/json;charset=UTF-8","application/x-www-form-urlencoded"]
 			},
@@ -62,7 +65,7 @@
 						if(value != ''){
 							if(value.length >= 1 ){
 							  
-							  if (element[index].nodeName.toLowerCase() == el.input){						
+							  if (element[index].nodeName.toLowerCase() == el.input){
 								if(getExceptional == 'numeric'){
 									if(value.numericValidate() === true){
 										
@@ -110,6 +113,14 @@
 										
 									}else{
 										argsCondt.push(10)
+									}	
+								}
+								
+								if(getExceptional == 'video'){
+									if(value.videoNameValidate() === true){
+										
+									}else{
+										argsCondt.push(12)
 									}	
 								}
 							  }else if(element[index].nodeName.toLowerCase() == el.select){
@@ -208,6 +219,9 @@
 									case 11:									
 										msgAppend.push(customMsg),nameAppend.push(fieldName[j]),typeElement.push(createEl)
 										break
+									case 12:
+										msgAppend.push($$.message_Ai),nameAppend.push(fieldName[j]),typeElement.push(createEl)
+										break
 								}
 							}
 						}else{
@@ -241,7 +255,10 @@
 			serverResponse:function(args,bool,activeEl,activeElHtml){
 				var readJsn = qlabs.read.json, rspGlossry = qlabs.data.responseGlossary
 				function statusResponse(status,element){
-					var arrExeceptionsMsg = ['insertTrue','loginTrue','deleteTrue','updateTrue','resetTrue','resetSuccess'], exception = false;
+					var arrExeceptionsMsg = ['insertTrue','loginTrue','deleteTrue',
+											  'updateTrue','resetTrue','resetSuccess',
+											  'vendorDataTrue'], 
+						exception = false;
 					//parent default
 					var domParent = document.getElementById('alert-error'),customMsg,
 						domSuccessParent = document.getElementById('alert-success');
@@ -267,8 +284,12 @@
 					else if(status === 'resetSuccess')
 						customMsg = $$.resetSuccess;	
 					else if(status === 'loginTrue')
-						customMsg = $$.loginTrue;	
-					
+						customMsg = $$.loginTrue;
+					else if (status === 'vendorDataTrue')
+						customMsg = $$.vendorDataTrue;
+					else if(status === 'TokenMismatchException')
+						customMsg = $$.TokenMis;
+						
 					for(var index = 0; index<arrExeceptionsMsg.length;index++){
 						if(status == arrExeceptionsMsg[index]){
 							var exception = true
@@ -300,6 +321,40 @@
 					return getResponse.serverResponse;
 				}else{
 					//inValid responseText not Json Object
+					//handling tokenmismatch laravel
+					if(JSON.stringify(args.responseText).indexOf("TokenMismatchException") > -1){
+						if(id('alert-error')){
+								appendObject(el.span, $$.TokenMis, id('alert-error'), '')
+						}else{
+							pTimeOut = $('#long-splash');
+							pTimeOut.find('abbr').html(msg.tokenMis)
+							pTimeOut.fadeIn( 100 );
+						}
+					}
+					
+				}
+			},
+			helper:{
+				handlingMismatch:function(data){
+					//handling TokenMismatchException laravel
+					if(JSON.stringify(data).indexOf("TokenMismatchException") > -1){
+						if(id('alert-error')){
+							qlabs.serverResponse(this,true,null);
+						}else{
+							pTimeOut.find('abbr').html(msg.tokenMis)
+							pTimeOut.fadeIn( 100 );
+						}
+						
+						setTimeout(function(){
+							location.reload()
+						},5000)
+						
+						return true;
+					}else{
+						return false;
+					}
+					
+					
 				}
 			},
 			ajax:{
@@ -310,6 +365,7 @@
 
 					if (window.XMLHttpRequest) {
 						self.data = new XMLHttpRequest();
+						pTimeOut.fadeIn( 100 );
 					}else {
 						self.data = new ActiveXObject("Microsoft.XMLHTTP");
 					} 
@@ -317,21 +373,26 @@
 					self.data.callback = handler
 					self.data.arguments = Array.prototype.slice.call(arguments, 2)
 					self.data.onerror = function(e) {
-						pTimeOut.find('abbr').html(msg.ajaxReconnect)
-						pTimeOut.fadeIn( 100 );
-						
-						if(method == 'typepost')
-							 self.data.open('POST', url, true);
-						else if(method == 'typeget')
-							 self.data.open('GET', url, true);
-						
-						self.data.setRequestHeader("Content-Type", contentTyp);
-						self.data.send(JSON.stringify(getData)); 
+						if(qlabs.helper.handlingMismatch(this.responseText) == true){
+							//do nothing 
+						}else{
+							pTimeOut.find('abbr').html(msg.ajaxTimeOut)
+							pTimeOut.fadeIn( 100 );
+							
+							if(method == 'typepost')
+								 self.data.open('POST', url, true);
+							else if(method == 'typeget')
+								 self.data.open('GET', url, true);
+							
+							self.data.setRequestHeader("Content-Type", contentTyp);
+							self.data.send(JSON.stringify(getData)); 
+						}
 					};
-					self.data.onload = function () {
-						this.callback.apply(this, this.arguments);
-						pTimeOut.fadeOut( 1000);
+					self.data.onload = function () {						
+						qlabs.helper.handlingMismatch(this.responseText)  ;
 						
+						this.callback.apply(this, this.arguments);
+						pTimeOut.fadeOut(1000);
 					};		
 
 					self.data.timeout = 1000;
@@ -351,18 +412,19 @@
 								//do nothing
 							}else{
 								if (this.status == 0) {
-									pTimeOut.find('abbr').html(msg.ajaxTimeOut)
+									pTimeOut.find('abbr').html(msg.ajaxReconnect)
 									pTimeOut.fadeIn( 100 );
 									if(method == 'typepost'){
 										 self.data.open('POST', url, true);
 									}else if(method == 'typeget'){
 										 self.data.open('GET', url, true);
 									}
+																		
 									self.data.setRequestHeader("Content-Type", contentTyp);
 									self.data.send(JSON.stringify(getData)); 		
 								}
 							}
-						
+							
 						}
 					}else if (contentTyp == 'application/x-www-form-urlencoded'){		
 						self.data.setRequestHeader("Content-Type", contentTyp);	
@@ -794,24 +856,26 @@
 			}])			
 		  })(getJson,qlabs.read.json) 
 		}
-		
-		/*
-		function parentFunc(sRespond,domParent) {
-		  var url,sRespond;
-		  if(typeof sRespond !== "undefined"){
-		    switch(sRespond.toLowerCase()){
-		    	case srvRsnp.msg_Xa:self.location = $$.address_Xb;break
-		   		case srvRsnp.msg_Xb:appendObject.call(this,'span',$$.message_Xa,domParent,null); break;
-		   		case srvRsnp.msg_Xc:appendObject.call(this,'span',$$.message_Xb,domParent,null); break;		   		
-		    }
-		  }
-		}
 
-		parentFunc.prototype.checking = function (sRespond, domParent) {
-		  parentFunc.apply(undefined, [sRespond, domParent]);		 
+		String.prototype.videoNameValidate = function() {
+		   //
+		   var fileExtention = this.split('.').pop(),
+			   fileTypeArr = ['mp4'];
+			var allow;
+			for(var index=0;index<fileTypeArr.length;index++){
+				if(fileTypeArr[index].toLowerCase() == fileExtention.toLowerCase()){
+					allow = true;
+					break;
+				}
+			}
+			
+			if(allow === true){
+				return true;
+			}else{
+				return false;
+			}
 		};
-		*/
-
+		
 		String.prototype.numericValidate = function() {
 		    var index = this,re = /^\d+$/;
 	    	if(re.test(index)){
@@ -1029,6 +1093,9 @@
 			return getIdElement;
 		}
 
+
+		
+		
 		var delay = (function(){
 		  var timer = 0;
 		  return function(callback, ms){
