@@ -58,98 +58,96 @@
 			},
 			error:{	
 				errConditions: function(element,index,getExceptional){
-					
 					aErr = new Array(),argsCondt = new Array();
+					var activeEl = element[index];
+					
+					
+					var coloring = function(index){
+						!index ? 
+							activeEl.style.backgroundColor = '#fff' : 
+							activeEl.style.backgroundColor  = '#FFE8E8',
+							//push error number
+							typeof index == "number" ? argsCondt.push(index) : null;	
+					}
+					
+					
 					var value =	$.trim(element[index].value);
 					if (getExceptional != 'throughElement'){
 						if(value != ''){
+							coloring(false)
+							
 							if(value.length >= 1 ){
 							  
 							  if (element[index].nodeName.toLowerCase() == el.input){
-								if(getExceptional == 'numeric'){
-									if(value.numericValidate() === true){
-										
-									}else{
-										argsCondt.push(3)
-									}	
-								}
+							  
+								//numeric validation
+								getExceptional == 'numeric' ? 
+								( value.numericValidate() ? 
+									coloring(false) : 
+									coloring(3) 
+								) : null;
 								
-								if(getExceptional == 'email'){
-									if(value.emailValidate() === true){
-										
-									}else{
-										argsCondt.push(4)
-									}						
-								}
+								//email validation
+								getExceptional == 'email' ? 
+								( value.emailValidate() ? 
+									coloring(false) : 
+									coloring(4)  
+								) : null;	
+								
+								//password validation
 								if(getExceptional == 'password'){
-									if(value.passValidate() === true){
+									if(value.passValidate()){
 										passDumpt.push(value)
-										if(passDumpt.length === 2){
-											if(passDumpt[0] == passDumpt[1]){
-												
-											}else{
-												argsCondt.push(7)
-											}
-										}
+										passDumpt.length === 2 ?
+										( passDumpt[0] == passDumpt[1] ? 
+												coloring(false) : 
+												coloring(7) 
+										) : null ;
 										
 									}else{
-										argsCondt.push(6)
+										coloring(6) 
 									}						
 								}
 								
-								if(getExceptional == 'zipcode'){
-									if(value.zipCodeValidate() === true){
-										if(value.numericValidate() === true){
-											
-										}else{
-											argsCondt.push(3)
-										}	
-									}else{
-										argsCondt.push(9)
-									}						
-								}
-								if(getExceptional == 'phone'){
-									if(value.numericValidate() === true && value.length >= 6){
-										
-									}else{
-										argsCondt.push(10)
-									}	
-								}
+								//zipcode validation
+								getExceptional == 'zipcode' ? 
+								( value.zipCodeValidate() && value.numericValidate() ? 
+									coloring(9) : 
+									coloring(false) 
+								) : null;
 								
-								if(getExceptional == 'video'){
-									if(value.videoNameValidate() === true){
-										
-									}else{
-										argsCondt.push(12)
-									}	
-								}
+								//phone validation
+								getExceptional == 'phone' ? 
+								( value.numericValidate() && value.length >= 6  ? 
+									coloring(false) : 
+									coloring(10) 
+								) : null ;
+								
+								//video validation
+								getExceptional == 'video' ? 
+								( value.videoNameValidate() ? 
+									coloring(false) : 
+									coloring(12)
+								) : null;
+								
+								
 							  }else if(element[index].nodeName.toLowerCase() == el.select){
-									if( value != 'none'){
-									
-									}else{
-										argsCondt.push(5)
-									}
+									value != 'none' ? null : coloring(5);
 							  }
 							  
-							 if(getExceptional !== 'password'){
-									if(value.commonValidate() === true){
-									
-									}else{
-										argsCondt.push(8)
-									}
-							 }
+							  if(getExceptional !== 'password'){
+								value.commonValidate() ? null : coloring(8);
+							  }
 							}else{
-								argsCondt.push(2)
+								coloring(2)
 							}				
 						}else{
-							
-							argsCondt.push(1)
+							coloring(1)
 						}
 					}
 					
 					if (element[index].nodeType === 1)		
-						aErr.push(element[index].nodeName.toLowerCase());
-											
+						aErr.push(element[index].nodeName.toLowerCase());				
 					return{
 						elemenIndex : aErr,
 						elementCheckResult : argsCondt
@@ -181,6 +179,7 @@
 					else
 					  createEl = el.label;
 									
+								
 					do {	
 						if (objElement[j].elementCheckResult.length !== 0){
 							conditions = objElement[j].elementCheckResult; 
@@ -323,8 +322,8 @@
 					//inValid responseText not Json Object
 					//handling tokenmismatch laravel
 					if(JSON.stringify(args.responseText).indexOf("TokenMismatchException") > -1){
-						if(id('alert-error')){
-								appendObject(el.span, $$.TokenMis, id('alert-error'), '')
+						if(document.getElementById('alert-error')){
+								appendObject(el.span, $$.TokenMis, document.getElementById('alert-error'), '')
 						}else{
 							pTimeOut = $('#long-splash');
 							pTimeOut.find('abbr').html(msg.tokenMis)
@@ -338,13 +337,8 @@
 				handlingMismatch:function(data){
 					//handling TokenMismatchException laravel
 					if(JSON.stringify(data).indexOf("TokenMismatchException") > -1){
-						if(id('alert-error')){
-							qlabs.serverResponse(this,true,null);
-						}else{
-							pTimeOut.find('abbr').html(msg.tokenMis)
-							pTimeOut.fadeIn( 100 );
-						}
-						
+						pTimeOut.find('abbr').html(msg.tokenMis)
+						pTimeOut.fadeIn( 100 );
 						setTimeout(function(){
 							location.reload()
 						},5000)
@@ -379,30 +373,27 @@
 							pTimeOut.find('abbr').html(msg.ajaxTimeOut)
 							pTimeOut.fadeIn( 100 );
 							
-							if(method == 'typepost')
-								 self.data.open('POST', url, true);
-							else if(method == 'typeget')
-								 self.data.open('GET', url, true);
+							method == 'typepost' ? self.data.open('POST', url, true) : self.data.open('GET', url, true);
 							
 							self.data.setRequestHeader("Content-Type", contentTyp);
 							self.data.send(JSON.stringify(getData)); 
 						}
 					};
 					self.data.onload = function () {						
-						qlabs.helper.handlingMismatch(this.responseText)  ;
-						
-						this.callback.apply(this, this.arguments);
-						pTimeOut.fadeOut(1000);
+						if(qlabs.helper.handlingMismatch(this.responseText) == true){
+							//do nothing
+						}else{	
+							this.callback.apply(this, this.arguments);
+							pTimeOut.fadeOut(1000);
+						}
 					};		
 
 					self.data.timeout = 1000;
-					if(method == 'typepost'){
-						 self.data.open('POST', url, true);
-					}else if(method == 'typeget'){
-						 self.data.open('GET', url, true);
-					}
+					 
+					method == 'typepost' ? self.data.open('POST', url, true) : self.data.open('GET', url, true);
+					
 
-					if(contentTyp == 'application/json;charset=UTF-8'){
+					if(contentTyp == qlabs.data.contentType[0]){
 						self.data.setRequestHeader('X-CSRF-TOKEN', VidLib.token())
 						self.data.setRequestHeader("Content-Type", contentTyp);	
 						self.data.send(JSON.stringify(getData));
@@ -414,19 +405,16 @@
 								if (this.status == 0) {
 									pTimeOut.find('abbr').html(msg.ajaxReconnect)
 									pTimeOut.fadeIn( 100 );
-									if(method == 'typepost'){
-										 self.data.open('POST', url, true);
-									}else if(method == 'typeget'){
-										 self.data.open('GET', url, true);
-									}
-																		
+									
+									method == 'typepost' ? self.data.open('POST', url, true) : self.data.open('GET', url, true);
+			
 									self.data.setRequestHeader("Content-Type", contentTyp);
 									self.data.send(JSON.stringify(getData)); 		
 								}
 							}
 							
 						}
-					}else if (contentTyp == 'application/x-www-form-urlencoded'){		
+					}else if (contentTyp == qlabs.data.contentType[1]){		
 						self.data.setRequestHeader("Content-Type", contentTyp);	
 						self.data.send(getData);
 						self.data.ontimeout = function () {
@@ -437,11 +425,8 @@
 									pTimeOut.find('abbr').html(msg.ajaxReconnect)
 									pTimeOut.fadeIn( 100 );
 								
-									if(method == 'typepost'){
-										 self.data.open('POST', url, true);
-									}else if(method == 'typeget'){
-										 self.data.open('GET', url, true);
-									}
+									method == 'typepost' ? self.data.open('POST', url, true) : self.data.open('GET', url, true);
+									
 									self.data.setRequestHeader("Content-Type", contentTyp);	
 									self.data.send(getData);
 								}
